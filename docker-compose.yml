@@ -1,0 +1,46 @@
+version: "3"
+
+services:
+  db:
+    image: mysql:8.0
+    environment:
+      MYSQL_ROOT_PASSWORD: password
+      TZ: "Asia/Tokyo"
+    command: --default-authentication-plugin=mysql_native_password
+    volumes:
+      - "mysql-data:/var/lib/mysql"
+
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "3000:3000"
+    volumes:
+      - ".:/myApp"
+      - sockets:/myApp/tmp/sockets
+    tty: true
+    stdin_open: true
+    depends_on:
+      - db
+    links:
+      - db
+
+  web:
+    build:
+      context: .
+      dockerfile: ./nginx/Dockerfile
+    volumes:
+      - public-data:/myApp/public
+      - tmp-data:/myApp/tmp
+      - sockets:/myApp/tmp/sockets
+    ports:
+      - 80:80
+    depends_on:
+      - app
+
+volumes:
+  mysql-data:
+  public-data:
+  tmp-data:
+  sockets:
